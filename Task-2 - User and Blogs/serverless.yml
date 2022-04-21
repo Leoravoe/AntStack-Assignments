@@ -1,0 +1,140 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: user-and-blogs
+
+plugins:
+   - serverless-appsync-plugin
+  #  - serverless-pseudo-parameters
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  lambdaHashingVersion: 20201221
+  region: us-east-1
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:            
+            - "dynamodb:PutItem"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:GetItem"
+            - "dynamodb:Query"
+            - "dynamodb:Scan"
+          Resource: 
+            - { "Fn::GetAtt": ["UserDynamoDBTable", "Arn"] } 
+            - { "Fn::GetAtt": ["BlogsDynamoDBTable", "Arn"] }
+# you can define service wide environment variables here
+  environment:
+    UsersTable : ${self:custom.USERS_TABLE}
+    BlogsTable : ${self:custom.BLOGS_TABLE}
+
+
+custom:      
+  USERS_TABLE: UserTable
+  BLOGS_TABLE: BlogsTable
+  appSync:
+    name: appsync-user-blogs
+    authenticationType: API_KEY
+
+    mappingTemplates:      
+      - type: Mutation
+        field: createUser
+        dataSource: createUserFunction
+        request: false
+        response: false
+
+      - type: Mutation
+        field: updateUser
+        dataSource: updateUserFunction
+        request: false
+        response: false
+        
+      - type: Mutation
+        field: deleteUser
+        dataSource: deleteUserFunction
+        request: false
+        response: false
+        
+      - type: Query
+        field: getUser
+        dataSource: getUserFunction
+        request: false
+        response: false
+
+
+    dataSources:        
+      - type: AWS_LAMBDA
+        name: createUserFunction
+        config:
+          functionName: createUser
+
+      - type: AWS_LAMBDA
+        name: updateUserFunction
+        config:
+          functionName: updateUser
+
+      - type: AWS_LAMBDA
+        name: deleteUserFunction
+        config:
+          functionName: deleteUser
+          
+      - type: AWS_LAMBDA
+        name: getUserFunction
+        config:
+          functionName: getUser
+
+# you can add packaging informat
+functions:
+  createUser:
+    handler: User/userHandler.createUser
+  updateUser:
+    handler: User/userHandler.updateUser
+  deleteUser:
+    handler: User/userHandler.deleteUser
+  getUser:
+    handler: User/userHandler.getUser
+
+resources:
+  Resources:
+    UserDynamoDBTable:
+      Type: "AWS::DynamoDB::Table"
+      DeletionPolicy: Delete
+      Properties:
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.USERS_TABLE}
+    BlogsDynamoDBTable:
+      Type: "AWS::DynamoDB::Table"
+      DeletionPolicy: Delete
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+          - AttributeName: userId
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.BLOGS_TABLE}
