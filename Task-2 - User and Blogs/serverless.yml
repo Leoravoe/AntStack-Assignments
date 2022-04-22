@@ -50,7 +50,8 @@ custom:
     name: appsync-user-blogs
     authenticationType: API_KEY
 
-    mappingTemplates:      
+    mappingTemplates:
+        # Users
       - type: Mutation
         field: createUser
         dataSource: createUserFunction
@@ -76,7 +77,41 @@ custom:
         response: false
 
 
-    dataSources:        
+      
+        # Blogs
+      - type: Mutation
+        field: createBlog
+        dataSource: createBlogFunction
+        request: false
+        response: false
+
+      - type: Mutation
+        field: updateBlog
+        dataSource: updateBlogFunction
+        request: false
+        response: false
+        
+      - type: Mutation
+        field: deleteBlog
+        dataSource: deleteBlogFunction
+        request: false
+        response: false
+        
+      - type: Query
+        field: getBlogById
+        dataSource: getBlogByIdFunction
+        request: false
+        response: false
+
+      - type: Query
+        field: getBlogs
+        dataSource: getBlogsFunction
+        request: false
+        response: false
+
+
+    dataSources:   
+        #  Users
       - type: AWS_LAMBDA
         name: createUserFunction
         config:
@@ -97,8 +132,35 @@ custom:
         config:
           functionName: getUser
 
+        # Blogs
+      - type: AWS_LAMBDA
+        name: createBlogFunction
+        config:
+          functionName: createBlog
+
+      - type: AWS_LAMBDA
+        name: updateBlogFunction
+        config:
+          functionName: updateBlog
+
+      - type: AWS_LAMBDA
+        name: deleteBlogFunction
+        config:
+          functionName: deleteBlog
+          
+      - type: AWS_LAMBDA
+        name: getBlogByIdFunction
+        config:
+          functionName: getBlogById
+          
+      - type: AWS_LAMBDA
+        name: getBlogsFunction
+        config:
+          functionName: getBlogs
+
 # you can add packaging informat
 functions:
+  # Users handler functions
   createUser:
     handler: User/userHandler.createUser
   updateUser:
@@ -107,6 +169,18 @@ functions:
     handler: User/userHandler.deleteUser
   getUser:
     handler: User/userHandler.getUser
+  
+  # Blogs handler functions
+  createBlog:
+    handler: Blogs/blogsHandler.createBlog
+  updateBlog:
+    handler: Blogs/blogsHandler.updateBlog
+  deleteBlog:
+    handler: Blogs/blogsHandler.deleteBlog
+  getBlogById:
+    handler: Blogs/blogsHandler.getBlogById
+  getBlogs:
+    handler: Blogs/blogsHandler.getBlogs
 
 resources:
   Resources:

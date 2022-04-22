@@ -7,12 +7,27 @@ type Mutation {
     createUser(name: String!, age: Int!, gender: String!): User
     updateUser(id: ID!, name: String!, age: Int!): UpdateUser
     deleteUser(id: ID!): Delete
+
+    createBlog(userId: ID!, title: String!, content: String!, visibility: [ID!]): Blog
+    updateBlog(id: ID!, userId: ID!, title: String!, content: String!, visibility: [ID!]): UpdateBlog
+    deleteBlog(id: ID!, userId: ID!): Delete
 }
 type Query {
     getUser(id: ID!) : User
+    getBlogById(id: ID!, userId: ID!) : Blog
+    getBlogs(id: ID!, userId: ID!) : [Blog]
 }
+
+type User {
+    id: ID!
+    name: String!
+    age: Int
+    gender: String
+}
+
 type UpdateUser {
     id: ID!, 
+    userId: ID!
     name: String, 
     age: Int
 }
@@ -21,9 +36,18 @@ type Delete {
     id: ID!
 }
 
-type User {
+
+type Blog {
     id: ID!
-    name: String!
-    age: Int
-    gender: String
+    userId: ID!
+    title: String
+    content: String
+    visibility: [ID!]
+}
+
+type UpdateBlog {
+    id: ID!
+    title: String!
+    content: String!
+    visibility: [ID!]
 }
