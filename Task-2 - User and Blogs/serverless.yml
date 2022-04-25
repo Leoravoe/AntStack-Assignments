@@ -34,9 +34,18 @@ provider:
             - "dynamodb:GetItem"
             - "dynamodb:Query"
             - "dynamodb:Scan"
+          # Resource: 
+          #   - { "Fn::GetAtt": ["UserDynamoDBTable", "Arn"] } 
+          #   - { "Fn::GetAtt": ["BlogsDynamoDBTable", "Arn"] }
           Resource: 
-            - { "Fn::GetAtt": ["UserDynamoDBTable", "Arn"] } 
-            - { "Fn::GetAtt": ["BlogsDynamoDBTable", "Arn"] }
+            - "Fn::Join": 
+              - ""
+              - - Fn::GetAtt: ["UserDynamoDBTable", "Arn"]
+                - "*"
+            - "Fn::Join": 
+              - ""
+              - - Fn::GetAtt: ["BlogsDynamoDBTable", "Arn"]
+                - "*"
 # you can define service wide environment variables here
   environment:
     UsersTable : ${self:custom.USERS_TABLE}
@@ -45,7 +54,7 @@ provider:
 
 custom:      
   USERS_TABLE: UserTable
-  BLOGS_TABLE: BlogsTable
+  BLOGS_TABLE: BlogTable
   appSync:
     name: appsync-user-blogs
     authenticationType: API_KEY
@@ -208,7 +217,14 @@ resources:
         KeySchema:
           - AttributeName: id
             KeyType: HASH
-          - AttributeName: userId
-            KeyType: RANGE
+          # - AttributeName: userId
+          #   KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: UserIdIndex
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+            Projection: 
+              ProjectionType: "ALL"
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:custom.BLOGS_TABLE}

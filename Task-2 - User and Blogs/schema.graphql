@@ -14,8 +14,8 @@ type Mutation {
 }
 type Query {
     getUser(id: ID!) : User
-    getBlogById(id: ID!, userId: ID!) : Blog
-    getBlogs(id: ID!, userId: ID!) : [Blog]
+    getBlogById(id: ID!) : Blog
+    getBlogs(userId: ID!) : [Blog]
 }
 
 type User {

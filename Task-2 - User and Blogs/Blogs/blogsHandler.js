@@ -75,12 +75,11 @@ const deleteBlog = async (event) => {
 
 const getBlogById = async (event) => {
   try {
-    const {id , userId} = event.arguments
+    const {id} = event.arguments
     const params = {
       TableName: process.env.BlogsTable,
       Key: {
-        id,
-        userId
+        id
       },
     };
 
@@ -100,9 +99,9 @@ const getBlogs = async (event) => {
     const {id,userId} = event.arguments
     const params = {
         TableName: process.env.BlogsTable,
-        KeyConditionExpression: 'id = :id AND userId = :userId',
+        IndexName : "UserIdIndex",
+        KeyConditionExpression: 'userId = :userId',
         ExpressionAttributeValues: {
-            ':id': id,
             ':userId': userId
         }
     };
@@ -110,6 +109,7 @@ const getBlogs = async (event) => {
     const blog = await dynamoDb.query(params).promise();
     return blog.Items
   } catch (error) {
+      console.log(error);
       return {
         message: error.message
       }
