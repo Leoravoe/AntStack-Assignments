@@ -1,0 +1,55 @@
+
+service: file-upload-in-s3
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+
+# you can overwrite defaults here
+  stage: dev
+  region: us-east-1
+  apiGateway:
+    # accepted binary type for file uploads
+    binaryMediaTypes:
+      - 'multipart/form-data'
+
+# you can add statements to the Lambda function's IAM Role here
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "s3:PutObject"
+            - "s3:PutObjectAcl"
+            - "s3:GetObject"
+          Resource:
+            "Fn::Join":
+              - ""
+              - - "arn:aws:s3:::"
+                - Ref : DeploymentBucket
+                - "/*"
+
+# you can define service wide environment variables here
+  environment:
+    BUCKET_NAME: ${self:custom.bucket}
+
+custom:
+  bucket: lambda-test-preetam-file-home
+
+functions:
+  UploadFile:
+    handler: handler.uploadFile
+    events:
+      - http:
+          path: /api/v1/upload
+          method: post
+          cors: true
+
+# you can add CloudFormation resource templates here
+resources:
+  Resources:
+    DeploymentBucket:
+      Type: "AWS::S3::Bucket"
+      Properties:
+        BucketName: ${self:custom.bucket}
+        AccessControl: PublicRead

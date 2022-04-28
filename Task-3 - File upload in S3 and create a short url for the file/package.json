@@ -1,0 +1,16 @@
+{
+  "name": "file-upload",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1122.0",
+    "lambda-multipart-parser": "^1.0.1",
+    "node-uuid": "^1.4.8"
+  }
+}
