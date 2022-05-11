@@ -26,6 +26,12 @@ provider:
   iam:
     role:
       statements:
+        - Effect: Allow
+          Action:
+            - "cognito-idp:AdminInitiateAuth"
+            - "cognito-idp:AdminCreateUser"
+            - "cognito-idp:AdminSetUserPassword"
+          Resource: "*"
         - Effect: "Allow"
           Action:            
             - "dynamodb:PutItem"
@@ -50,17 +56,50 @@ provider:
   environment:
     UsersTable : ${self:custom.USERS_TABLE}
     BlogsTable : ${self:custom.BLOGS_TABLE}
+    user_pool_id:
+      Ref: CognitoUserPool
+    client_id:
+      Ref: CognitoUserClient
 
 
 custom:      
   USERS_TABLE: UserTable
   BLOGS_TABLE: BlogTable
+  LambdaAuthName : LambdaAuthorization
   appSync:
     name: appsync-user-blogs
     authenticationType: API_KEY
-
+    # userPoolConfig:
+    #   awsRegion: # defaults to provider region
+    #   defaultAction: ALLOW 
+    #   userPoolId:
+    #     Ref : CognitoUserPool
+    #   appIdClientRegex: # optional
+    # additionalAuthenticationProviders:
+    #   - authenticationType: AWS_LAMBDA
+    #     lambdaAuthorizerConfig:
+    #       The function name in your serverless.yml. Ignored if lambdaFunctionArn is provided.
+    #       functionName: ${self:custom.LambdaAuthName}
+    #       functionAlias: # optional, used with functionName
+    #       lambdaFunctionArn: 
+    #         Fn::GetAtt: ["AuthorizationLambdaFuncLambdaFunction", "Arn"]
+    #         arn:aws:lambda:${self:provider.region}:*:function:${self:custom.LambdaAuthName}
+    #       identityValidationExpression: # optional
+    #       authorizerResultTtlInSeconds: # optional
     mappingTemplates:
         # Users
+      - type: Mutation
+        field: signupUser
+        dataSource: signupUserFunction
+        request: false
+        response: false
+        
+      - type: Mutation
+        field: signinUser
+        dataSource: signinUserFunction
+        request: false
+        response: false
+
       - type: Mutation
         field: createUser
         dataSource: createUserFunction
@@ -122,6 +161,16 @@ custom:
     dataSources:   
         #  Users
       - type: AWS_LAMBDA
+        name: signupUserFunction
+        config:
+          functionName: signupUser
+
+      - type: AWS_LAMBDA
+        name: signinUserFunction
+        config:
+          functionName: signinUser
+
+      - type: AWS_LAMBDA
         name: createUserFunction
         config:
           functionName: createUser
@@ -169,7 +218,16 @@ custom:
 
 # you can add packaging informat
 functions:
+
+  # Authorization lambda function
+  AuthorizationLambdaFunc:
+    handler: Authorization/auth.auth
+
   # Users handler functions
+  signupUser:
+    handler: User/userHandler.signupUser
+  signinUser:
+    handler: User/userHandler.signinUser
   createUser:
     handler: User/userHandler.createUser
   updateUser:
@@ -228,3 +286,27 @@ resources:
               ProjectionType: "ALL"
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:custom.BLOGS_TABLE}
+    CognitoUserPool:
+      Type: "AWS::Cognito::UserPool"
+      Properties:
+        # Generate a name based on the stage
+        UserPoolName: ${self:provider.stage}-user-pool
+        # Set email as an alias
+        UsernameAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 6
+    CognitoUserClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: user-pool
+        GenerateSecret: false
+        UserPoolId:
+          Ref: CognitoUserPool
+        AccessTokenValidity: 5
+        IdTokenValidity: 5
+        ExplicitAuthFlows:
+          - "ADMIN_NO_SRP_AUTH"

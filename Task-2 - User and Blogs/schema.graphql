@@ -4,18 +4,28 @@ schema {
 }
 
 type Mutation {
+    signupUser(email: String!, password: String!): Message
+    signinUser(email: String!, password: String!): Signin
     createUser(name: String!, age: Int!, gender: String!): User
     updateUser(id: ID!, name: String!, age: Int!): UpdateUser
     deleteUser(id: ID!): Delete
 
-    createBlog(userId: ID!, title: String!, content: String!, visibility: [ID!]): Blog
-    updateBlog(id: ID!, userId: ID!, title: String!, content: String!, visibility: [ID!]): UpdateBlog
-    deleteBlog(id: ID!, userId: ID!): Delete
+    createBlog(userId: ID!, title: String!, content: String!, visibility: [ID!]): Blog 
+    updateBlog(id: ID!, title: String!, content: String!, visibility: [ID!]): UpdateBlog
+    deleteBlog(id: ID!): Delete
 }
 type Query {
     getUser(id: ID!) : User
     getBlogById(id: ID!) : Blog
     getBlogs(userId: ID!) : [Blog]
+}
+
+type Message {
+    message: String!
+}
+type Signin {
+    message: String!
+    token: String!
 }
 
 type User {
@@ -26,8 +36,7 @@ type User {
 }
 
 type UpdateUser {
-    id: ID!, 
-    userId: ID!
+    id: ID!,
     name: String, 
     age: Int
 }
